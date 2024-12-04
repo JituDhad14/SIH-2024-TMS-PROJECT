@@ -1,6 +1,22 @@
 {
-    "metrics.csv": 18.36,
-    "metrics2.csv": 24.6,
-    "metrics3.csv": 26.16,
-    "metrics4.csv": 25.04
+    "North": {
+        "Green": 71,
+        "Red": 46,
+        "Orange": 3
+    },
+    "South": {
+        "Green": 25,
+        "Red": 92,
+        "Orange": 3
+    },
+    "East": {
+        "Green": 8,
+        "Red": 109,
+        "Orange": 3
+    },
+    "West": {
+        "Green": 3,
+        "Red": 114,
+        "Orange": 3
+    }
 }
