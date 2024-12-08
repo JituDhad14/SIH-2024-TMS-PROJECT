@@ -12,36 +12,41 @@ function App() {
     const eventSource = new EventSource("http://localhost:5000/stream-signals");
 
     eventSource.onmessage = (event) => {
+      console.log("Event data received:", event.data); // Log incoming data
       const data = event.data.trim();
-
-      // Update signal states based on incoming data
+  
       if (data.startsWith("North")) {
-        setSignals((prevSignals) => ({
-          ...prevSignals,
-          North: data,
-        }));
+          setSignals((prevSignals) => ({
+              ...prevSignals,
+              North: data,
+          }));
       } else if (data.startsWith("South")) {
-        setSignals((prevSignals) => ({
-          ...prevSignals,
-          South: data,
-        }));
+          setSignals((prevSignals) => ({
+              ...prevSignals,
+              South: data,
+          }));
       } else if (data.startsWith("East")) {
-        setSignals((prevSignals) => ({
-          ...prevSignals,
-          East: data,
-        }));
+          setSignals((prevSignals) => ({
+              ...prevSignals,
+              East: data,
+          }));
       } else if (data.startsWith("West")) {
-        setSignals((prevSignals) => ({
-          ...prevSignals,
-          West: data,
-        }));
+          setSignals((prevSignals) => ({
+              ...prevSignals,
+              West: data,
+          }));
       }
-    };
-
-    eventSource.onerror = (error) => {
+  };
+  
+  eventSource.onerror = (error) => {
       console.error("Error with EventSource:", error);
-      eventSource.close();
-    };
+      console.log("EventSource readyState:", eventSource.readyState); // Log connection state
+  };
+  
+  eventSource.onopen = () => {
+    console.log("EventSource connection established.");
+};
+
 
     return () => {
       eventSource.close();

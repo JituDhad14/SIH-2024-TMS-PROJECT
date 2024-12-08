@@ -63,7 +63,7 @@ def traffic_signal(data):
 if __name__ == "__main__":
     try:
         # Load traffic data from the JSON file
-        traffic_data = load_traffic_data("Backend/traffic_data.json")
+        traffic_data = load_traffic_data("./traffic_data.json")
         traffic_signal(traffic_data)
     except KeyboardInterrupt:
         print("\nTraffic signal simulation ended.")
