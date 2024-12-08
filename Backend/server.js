@@ -5,6 +5,8 @@ const { exec, spawn } = require("child_process");
 const Signal = require("./models/Signal");
 const cors = require("cors");
 const path = require("path");
+const csv = require("csv-parser");
+const csvParser = require("csv-parser");
 
 const app = express();
 app.use(cors());
@@ -127,6 +129,284 @@ app.get("/stream-signals", (req, res) => {
   req.on("close", () => {
     console.log("Client disconnected, killing Python process.");
     pythonProcess.kill();
+  });
+});
+
+// Path to the CSV file
+const csvFilePath = path.join(__dirname, "../ml model/outputs/combined_traffic_data.csv");
+
+// Helper function to read CSV and filter data by direction
+const getDirectionData = (direction) => {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    fs.createReadStream(csvFilePath)
+      .pipe(csv())
+      .on("data", (data) => {
+        if (data.Direction && data.Direction.trim().toLowerCase() === direction.toLowerCase()) {
+          results.push(data);
+        }
+      })
+      .on("end", () => resolve(results))
+      .on("error", (err) => reject(err));
+  });
+};
+
+// Endpoint for North
+app.get("/north", async (req, res) => {
+  try {
+    const northData = await getDirectionData("North");
+    res.json(northData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to read data for North direction." });
+  }
+});
+
+// Endpoint for South
+app.get("/south", async (req, res) => {
+  try {
+    const southData = await getDirectionData("South");
+    res.json(southData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to read data for South direction." });
+  }
+});
+
+// Endpoint for East
+app.get("/east", async (req, res) => {
+  try {
+    const eastData = await getDirectionData("East");
+    res.json(eastData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to read data for East direction." });
+  }
+});
+
+// Endpoint for West
+app.get("/west", async (req, res) => {
+  try {
+    const westData = await getDirectionData("West");
+    res.json(westData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to read data for West direction." });
+  }
+});
+
+
+// Function to handle the signal countdown for a specific direction
+const getSignalCountdown = (direction, req, res) => {
+  const pythonProcess = spawn("python", ["-u", "signal_working_final.py"]);
+
+  // Stream Python output in real-time
+  pythonProcess.stdout.on("data", (data) => {
+    // Clean the data by removing control characters like [H] [J] etc.
+    const output = data.toString().replace(/[\[\]HJK]/g, "").trim();
+
+    // Extract the relevant signal line based on direction
+    const signalLine = output.split("\n").find((line) => line.includes(direction));
+
+    if (signalLine) {
+      console.log(`Sending ${direction} Signal:`, signalLine);
+      res.write(`data: ${signalLine}\n\n`); // Send data to the client
+    }
+  });
+
+  // Handle Python script errors
+  pythonProcess.stderr.on("data", (data) => {
+    console.error("Python Error:", data.toString());
+  });
+
+  // Handle Python script exit
+  pythonProcess.on("close", (code) => {
+    console.log(`Python process exited with code ${code}`);
+    res.end(); // Close the SSE connection
+  });
+
+  // Handle client disconnection
+  req.on("close", () => {
+    console.log("Client disconnected, killing Python process.");
+    if (!pythonProcess.killed) {
+      pythonProcess.kill("SIGTERM"); // Gracefully terminate the Python process
+    }
+  });
+};
+
+// Endpoint for real-time North Signal Countdown
+app.get("/north-countdown", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  getSignalCountdown("North", req, res); // Pass req and res to the function
+});
+
+// Endpoint for real-time South Signal Countdown
+app.get("/south-countdown", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  getSignalCountdown("South", req, res); // Pass req and res to the function
+});
+
+// Endpoint for real-time East Signal Countdown
+app.get("/east-countdown", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  getSignalCountdown("East", req, res); // Pass req and res to the function
+});
+
+// Endpoint for real-time West Signal Countdown
+app.get("/west-countdown", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  getSignalCountdown("West", req, res); // Pass req and res to the function
+});
+
+// Endpoint for North Metrics
+app.get("/north-metrics", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const csvFilePath = path.join(__dirname, "../ml model/outputs/frames_video1_metrics.csv"); // Replace with actual path for North
+
+  const rows = [];
+  
+  fs.createReadStream(csvFilePath)
+    .pipe(csvParser())
+    .on("data", (row) => {
+      rows.push(row);
+    })
+    .on("end", () => {
+      let currentIndex = 0;
+
+      const sendNextMetric = () => {
+        const row = rows[currentIndex];
+        const data = `Frame: ${row.Frame}, Vehicle Count: ${row.Vehicle_Count}, Average Speed (km/h): ${row.Average_Speed_kmph}, Queue Length (m): ${row.Queue_Length_meters}, Congestion Level: ${row.Congestion_Level}, Traffic Density: ${row.Traffic_Density_vehicles_per_meter}`;
+        res.write(`data: ${data}\n\n`);
+
+        currentIndex = (currentIndex + 1) % rows.length;
+        setTimeout(sendNextMetric, 1000);
+      };
+
+      sendNextMetric();
+    });
+
+  req.on("close", () => {
+    console.log("Client disconnected, ending stream.");
+    res.end();
+  });
+});
+
+// Endpoint for South Metrics
+app.get("/south-metrics", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const csvFilePath = path.join(__dirname, "../ml model/outputs/frames_video2_metrics.csv");// Replace with actual path for South
+
+  const rows = [];
+  
+  fs.createReadStream(csvFilePath)
+    .pipe(csvParser())
+    .on("data", (row) => {
+      rows.push(row);
+    })
+    .on("end", () => {
+      let currentIndex = 0;
+
+      const sendNextMetric = () => {
+        const row = rows[currentIndex];
+        const data = `Frame: ${row.Frame}, Vehicle Count: ${row.Vehicle_Count}, Average Speed (km/h): ${row.Average_Speed_kmph}, Queue Length (m): ${row.Queue_Length_meters}, Congestion Level: ${row.Congestion_Level}, Traffic Density: ${row.Traffic_Density_vehicles_per_meter}`;
+        res.write(`data: ${data}\n\n`);
+
+        currentIndex = (currentIndex + 1) % rows.length;
+        setTimeout(sendNextMetric, 1000);
+      };
+
+      sendNextMetric();
+    });
+
+  req.on("close", () => {
+    console.log("Client disconnected, ending stream.");
+    res.end();
+  });
+});
+
+// Endpoint for East Metrics
+app.get("/east-metrics", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const csvFilePath = path.join(__dirname, "../ml model/outputs/frames_video3_metrics.csv"); // Replace with actual path for East
+
+  const rows = [];
+  
+  fs.createReadStream(csvFilePath)
+    .pipe(csvParser())
+    .on("data", (row) => {
+      rows.push(row);
+    })
+    .on("end", () => {
+      let currentIndex = 0;
+
+      const sendNextMetric = () => {
+        const row = rows[currentIndex];
+        const data = `Frame: ${row.Frame}, Vehicle Count: ${row.Vehicle_Count}, Average Speed (km/h): ${row.Average_Speed_kmph}, Queue Length (m): ${row.Queue_Length_meters}, Congestion Level: ${row.Congestion_Level}, Traffic Density: ${row.Traffic_Density_vehicles_per_meter}`;
+        res.write(`data: ${data}\n\n`);
+
+        currentIndex = (currentIndex + 1) % rows.length;
+        setTimeout(sendNextMetric, 1000);
+      };
+
+      sendNextMetric();
+    });
+
+  req.on("close", () => {
+    console.log("Client disconnected, ending stream.");
+    res.end();
+  });
+});
+
+// Endpoint for West Metrics
+app.get("/west-metrics", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const csvFilePath = path.join(__dirname, "../ml model/outputs/frames_video4_metrics.csv");// Replace with actual path for West
+
+  const rows = [];
+  
+  fs.createReadStream(csvFilePath)
+    .pipe(csvParser())
+    .on("data", (row) => {
+      rows.push(row);
+    })
+    .on("end", () => {
+      let currentIndex = 0;
+
+      const sendNextMetric = () => {
+        const row = rows[currentIndex];
+        const data = `Frame: ${row.Frame}, Vehicle Count: ${row.Vehicle_Count}, Average Speed (km/h): ${row.Average_Speed_kmph}, Queue Length (m): ${row.Queue_Length_meters}, Congestion Level: ${row.Congestion_Level}, Traffic Density: ${row.Traffic_Density_vehicles_per_meter}`;
+        res.write(`data: ${data}\n\n`);
+
+        currentIndex = (currentIndex + 1) % rows.length;
+        setTimeout(sendNextMetric, 1000);
+      };
+
+      sendNextMetric();
+    });
+
+  req.on("close", () => {
+    console.log("Client disconnected, ending stream.");
+    res.end();
   });
 });
 
