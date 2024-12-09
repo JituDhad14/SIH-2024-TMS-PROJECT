@@ -116,7 +116,7 @@ for i, direction in enumerate(data['Direction']):
     }
 
 # Saving to traffic_data.json
-with open('traffic_data.json', 'w') as json_file:
+with open('./traffic_data.json', 'w') as json_file:
     json.dump(traffic_data, json_file, indent=4)
 
 print("\nTraffic data saved to traffic_data.json")
