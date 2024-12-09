@@ -7,6 +7,14 @@ const cors = require("cors");
 const path = require("path");
 const csv = require("csv-parser");
 const csvParser = require("csv-parser");
+const http = require('http');
+// const io = socketIo(server, {
+  
+//   cors: {
+//       origin: "http://localhost:5000", // Allow frontend origin
+//       methods: ["GET", "POST"],
+//   },
+// });
 
 const app = express();
 app.use(cors());
@@ -409,6 +417,109 @@ app.get("/west-metrics", (req, res) => {
     res.end();
   });
 });
+
+
+app.post('/run-notebooks', (req, res) => {
+  const notebookFolder = path.join(__dirname, '../ML/notebooks');
+
+  // List of notebook filenames (update if necessary)
+  const notebooks = [
+      //'data_preprocessing.ipynb',
+      'pso_implementation.ipynb',
+      //'visualization.ipynb'
+  ];
+
+  // Function to execute notebooks sequentially
+  const runNotebook = (index) => {
+      if (index >= notebooks.length) {
+          return res.json({ message: 'All notebooks executed successfully and outputs saved.' });
+      }
+
+      const notebookPath = path.join(notebookFolder, notebooks[index]);
+      const command = `papermill "${notebookPath}" "${notebookPath}"`;
+
+      exec(command, (error, stdout, stderr) => {
+          if (error) {
+              console.error(`Error running ${notebooks[index]}:`, stderr);
+              return res.status(500).json({
+                  error: `Failed to execute ${notebooks[index]}`,
+                  details: stderr,
+              });
+          }
+          
+          // Log the notebook output to the VS Code terminal
+          console.log(`Executed ${notebooks[index]} successfully.`);
+          console.log(stdout);  // Display notebook output in VS Code terminal
+
+          runNotebook(index + 1); // Run the next notebook
+      });
+  };
+
+  // Start executing notebooks from the first one
+  runNotebook(0);
+});
+
+// Paths
+const videoDirectory = path.join(__dirname, '../ML/data/videos');
+const emergencyFilePath = path.join(__dirname, '../ML/outputs/results/emergency.json');
+
+// Endpoint to list videos
+app.get('/videos', (req, res) => {
+    fs.readdir(videoDirectory, (err, files) => {
+        if (err) {
+            console.error('Error reading video directory:', err);
+            return res.status(500).json({ error: 'Failed to load videos' });
+        }
+
+        const videoFiles = files.filter(file => file.endsWith('.mp4'));
+        res.json(videoFiles);
+    });
+});
+
+// Endpoint to stream a specific video
+app.get('/video/:filename', (req, res) => {
+    const videoPath = path.join(videoDirectory, req.params.filename);
+
+    fs.stat(videoPath, (err, stats) => {
+        if (err) {
+            console.error('Error accessing video file:', err);
+            return res.status(404).send('Video not found');
+        }
+
+        const range = req.headers.range;
+        if (!range) {
+            return res.status(416).send('Range header required');
+        }
+
+        const videoSize = stats.size;
+        const CHUNK_SIZE = 10 ** 6; // 1MB
+        const start = Number(range.replace(/\D/g, ""));
+        const end = Math.min(start + CHUNK_SIZE, videoSize - 1);
+
+        const contentLength = end - start + 1;
+        const headers = {
+            "Content-Range": `bytes ${start}-${end}/${videoSize}`,
+            "Accept-Ranges": "bytes",
+            "Content-Length": contentLength,
+            "Content-Type": "video/mp4",
+        };
+
+        res.writeHead(206, headers);
+        const videoStream = fs.createReadStream(videoPath, { start, end });
+        videoStream.pipe(res);
+    });
+});
+
+// Endpoint to fetch emergency data
+app.get('/emergency-data', (req, res) => {
+    res.sendFile(emergencyFilePath, (err) => {
+        if (err) {
+            console.error('Error sending emergency.json:', err);
+            res.status(500).json({ error: 'Failed to fetch emergency data' });
+        }
+    });
+});
+
 
 // Start server
 app.listen(5000, () => {

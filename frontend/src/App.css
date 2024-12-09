@@ -1,3 +1,4 @@
+/* General App styling */
 .App {
   text-align: center;
 }
@@ -34,5 +35,70 @@
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+/* Grid layout for videos */
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Styling for each video container */
+/* Styling for each video container */
+.video-container {
+  display: flex;
+  flex-direction: column;
+  background: #f9f901;
+  border: 2px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.video-container video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Emergency data below the video */
+.video-info {
+  padding: 10px;
+  background: #ffffff; /* Light background for better visibility */
+  color: #cafb04; /* Black text for contrast */
+  border-radius: 0 0 8px 8px;
+  text-align: left;
+  font-size: 14px;
+}
+
+/* Highlight emergency alert in vibrant colors */
+.video-info .alert {
+  color: #d32f2f; /* Bright red for emergency text */
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Add subtle shadow and border to video-info for better contrast */
+.video-info {
+  box-shadow: 0 2px 4px rgba(255, 0, 0, 0.2);
+  border-top: 1px solid #ccc;
+}
+
+/* Responsive design */
+@media screen and (max-width: 600px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .video-info {
+    font-size: 12px;
+  }
+
+  .video-info .alert {
+    font-size: 14px;
   }
 }
