@@ -2,7 +2,7 @@ import json
 import numpy as np
 import pandas as pd
 
-data = pd.read_csv('C:/Users/Admin/Desktop/Traffic Management System/ML Model/outputs/combined_traffic_data.csv')
+data = pd.read_csv('./ML Model/outputs/combined_traffic_data.csv')
 
 # PSO parameters
 num_particles = 40
@@ -116,7 +116,7 @@ for i, direction in enumerate(data['Direction']):
     }
 
 # Saving to traffic_data.json
-with open('./traffic_data.json', 'w') as json_file:
+with open('./ML Model/outputs/traffic_data.json', 'w') as json_file:
     json.dump(traffic_data, json_file, indent=4)
 
 print("\nTraffic data saved to traffic_data.json")

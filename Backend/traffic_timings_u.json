@@ -1,0 +1,32 @@
+[
+    {
+        "direction": "North",
+        "green_time": 23.31,
+        "red_time": 93.69,
+        "orange_time": 3
+    },
+    {
+        "direction": "South",
+        "green_time": 23.84,
+        "red_time": 93.16,
+        "orange_time": 3
+    },
+    {
+        "direction": "East",
+        "green_time": 23.14,
+        "red_time": 93.86,
+        "orange_time": 3
+    },
+    {
+        "direction": "West",
+        "green_time": 22.77,
+        "red_time": 94.23,
+        "orange_time": 3
+    },
+    {
+        "direction": "U-Turn",
+        "green_time": 11.93,
+        "red_time": 105.07,
+        "orange_time": 3
+    }
+]

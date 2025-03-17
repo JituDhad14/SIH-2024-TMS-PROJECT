@@ -1,0 +1,20 @@
+ [
+    {
+        "direction": "North",
+        "green_time": 36.81,
+        "red_time": 80.19,
+        "orange_time": 3
+    },
+    {
+        "direction": "South",
+        "green_time": 37.65,
+        "red_time": 79.35,
+        "orange_time": 3
+    },
+    {
+        "direction": "East",
+        "green_time": 36.54,
+        "red_time": 80.46,
+        "orange_time": 3
+    }
+]

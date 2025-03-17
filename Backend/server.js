@@ -8,14 +8,6 @@ const path = require("path");
 const csv = require("csv-parser");
 const csvParser = require("csv-parser");
 const http = require('http');
-// const io = socketIo(server, {
-  
-//   cors: {
-//       origin: "http://localhost:5000", // Allow frontend origin
-//       methods: ["GET", "POST"],
-//   },
-// });
-
 const app = express();
 app.use(cors());
 
@@ -33,6 +25,46 @@ db.on("disconnected", () => {
     "mongodb+srv://sricharankolachalama:Charan05@cluster0.wfgb0zu.mongodb.net/traffic_management?retryWrites=true&w=majority",
     {}
   );
+});
+
+// Define the path to the videos folder
+const videosPath = path.join(__dirname, '../ML Model/data/videos');
+app.use("/data", express.static(path.join(__dirname, "/data"))); 
+
+// Serve the videos folder as static files
+app.use('/videos', express.static(videosPath));
+
+// Endpoint to get a list of all videos
+app.get('/api/videos', (req, res) => {
+  const fs = require('fs');
+  
+  fs.readdir(videosPath, (err, files) => {
+    if (err) {
+      console.error('Error reading videos directory:', err);
+      return res.status(500).send('Unable to fetch videos.');
+    }
+    
+    // Filter out non-video files if necessary
+    const videoFiles = files.filter(file => file.endsWith('.mp4')); // Adjust based on video formats
+    res.json(videoFiles);
+  });
+});
+app.use("/videos", express.static("videos"));
+const videos = [
+  { id: 0, direction: "North", url: "http://localhost:5000/videos/video1.mp4" },
+  { id: 1, direction: "South", url: "http://localhost:5000/videos/video2.mp4" },
+  { id: 2, direction: "East", url: "http://localhost:5000/videos/video3.mp4" },
+  { id: 3, direction: "West", url: "http://localhost:5000/videos/video4.mp4" },
+];
+
+// API for traffic data
+app.get("/api/traffic-data", (req, res) => {
+  res.json([
+    { direction: "North", url: "http://localhost:5000/data/frames_video1_metrics.csv" },
+    { direction: "South", url: "http://localhost:5000/data/frames_video2_metrics.csv" },
+    { direction: "East", url: "http://localhost:5000/data/frames_video3_metrics.csv" },
+    { direction: "West", url: "http://localhost:5000/data/frames_video4_metrics.csv" },
+  ]);
 });
 
 // Function to run pso_final
@@ -478,6 +510,7 @@ app.get('/videos', (req, res) => {
 
 // Endpoint to stream a specific video
 app.get('/video/:filename', (req, res) => {
+
     const videoPath = path.join(videoDirectory, req.params.filename);
 
     fs.stat(videoPath, (err, stats) => {
@@ -519,6 +552,34 @@ app.get('/emergency-data', (req, res) => {
         }
     });
 });
+
+// Endpoint for Y-junction
+app.get('/api/traffic-timings/y', (req, res) => {
+  fs.readFile('C:/Users/Admin/Desktop/Traffic Management System/traffic_timings_y.json', 'utf8', (err, data) => {
+      if (err) {
+          res.status(500).json({ error: 'Error reading Y-junction timings' });
+      } else {
+          res.json(JSON.parse(data));
+      }
+  });
+});
+
+// Endpoint for U-turn
+app.get('/api/traffic-timings/u', (req, res) => {
+  fs.readFile('C:/Users/Admin/Desktop/Traffic Management System/traffic_timings_u.json', 'utf8', (err, data) => {
+      if (err) {
+          res.status(500).json({ error: 'Error reading U-turn timings' });
+      } else {
+          res.json(JSON.parse(data));
+      }
+  });
+});
+app.use((req, res, next) => {
+  res.setHeader("Content-Security-Policy", "default-src 'self'; font-src 'self' http://localhost:5000; script-src 'self';");
+  next();
+});
+
+
 
 
 // Start server
