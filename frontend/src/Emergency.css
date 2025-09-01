@@ -1,0 +1,154 @@
+/* General App styling */
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Grid layout for videos */
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Styling for each video container */
+.video-container {
+  display: flex;
+  flex-direction: column;
+  background: #e4e806;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.video-container:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.video-container video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Emergency data below the video */
+.video-info {
+  padding: 15px;
+  background: #e1d606;
+  color: #333;
+  text-align: left;
+  font-size: 16px;
+  border-top: 1px solid #ccc;
+}
+
+/* Highlight emergency alert */
+.video-info .alert {
+  color: #d32f2f; /* Bright red for emergency text */
+  font-weight: bold;
+  font-size: 18px;
+  margin-top: 10px;
+  display: inline-block;
+}
+
+/* Notifications styling */
+.notifications {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  background: #16abd0;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.notification:hover {
+  background: #1392b2;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add subtle shadow and border to video-info for better contrast */
+.video-info {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive design */
+@media screen and (max-width: 600px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .video-info {
+    font-size: 14px;
+  }
+
+  .video-info .alert {
+    font-size: 16px;
+  }
+
+  .notifications {
+    width: 90%;
+    right: 5%;
+  }
+}

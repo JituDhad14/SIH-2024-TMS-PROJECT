@@ -1,0 +1,22 @@
+{
+    "North": {
+        "Green": 7,
+        "Red": 110,
+        "Orange": 3
+    },
+    "South": {
+        "Green": 34,
+        "Red": 83,
+        "Orange": 3
+    },
+    "East": {
+        "Green": 30,
+        "Red": 87,
+        "Orange": 3
+    },
+    "West": {
+        "Green": 37,
+        "Red": 80,
+        "Orange": 3
+    }
+}

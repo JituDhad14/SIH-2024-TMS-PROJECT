@@ -1,0 +1,5 @@
+road,density,queue_length
+north,0.9,10
+south,0.8,5
+east,0.4,9
+west,0.7,8
